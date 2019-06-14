@@ -28,23 +28,26 @@ class Camera():
     def update_logs(self):
         while True:
             new_log = random.choice(['tampering detected', 'occlusion detected'])
-            self._logs.append({'time': time.time(), 'message': new_log})
+            self._logs.append({'camera_id': self._identifier,'time': time.time(), 'message': new_log})
             time.sleep(3)
 
     def update_state(self):
         while True:
             current_state = random.choice(STATES)
+            self._current_state = current_state
             time.sleep(3)
 
 
     def wait_for_request(self):
         while True:
             try:
-                camera_request = requests.post('http://127.0.0.1:5000/getRequest', 
+                camera_request = requests.post('http://127.0.0.1:5000/getRequest/' + self._identifier, 
                         data=self._identifier, timeout=30)
                 print('got camera request', camera_request.text)
                 if camera_request.text == 'get_logs':
                     requests.post('http://127.0.0.1:5000/submitLogs', json=self._logs)
+                elif camera_request.text == 'get_state':
+                    requests.post('http://127.0.0.1:5000/submitState', data=self._current_state)
             except:
                 pass
 
@@ -53,9 +56,9 @@ def main():
     cam1 = Camera(identifier='1')
     cam1.start()
 
-    # # uncomment for final section
-    # cam2 = Camera(identifier='2')
-    # cam2.start()
+    # uncomment for final section
+    cam2 = Camera(identifier='2')
+    cam2.start()
 
     thread_pool.shutdown(wait=True)
 
